@@ -1,34 +1,18 @@
 pipeline {
     agent any
-    
-    tools {
-        maven 'local_maven'
-    }
-    parameters {
-         string(name: 'staging_server', defaultValue: '13.232.37.20', description: 'Remote Staging Server')
+
+    environment {
+        registry = "ananthdevulapalli/web"
+        registryCredential = 'docker'
     }
 
-stages{
-        stage('Build'){
+    stages {
+        stage('Checkout') {
             steps {
-                sh 'mvn clean package'
-            }
-            post {
-                success {
-                    echo 'Archiving the artifacts'
-                    archiveArtifacts artifacts: '**/target/*.war'
-                }
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'd79075a4-8fa8-4803-bfbc-fe76bbbfa56c', url: 'https://github.com/ananthdevulapalli/demo-java.git']]])
             }
         }
-
-        stage ('Deployments'){
-            parallel{
-                stage ("Deploy to Staging"){
-                    steps {
-                        sh "scp -v -o StrictHostKeyChecking=no **/*.war root@${params.staging_server}:/opt/tomcat/webapps/"
-                    }
-                }
-            }
-        }
+        
+    
     }
 }
